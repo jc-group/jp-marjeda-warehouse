@@ -50,6 +50,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           code: string
@@ -68,6 +89,27 @@ export type Database = {
           created_at?: string | null
           id?: string
           type?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
         }
         Relationships: []
       }
@@ -158,7 +200,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      move_inventory: {
+        Args: {
+          p_from_location_id: string
+          p_product_id: string
+          p_quantity: number
+          p_to_location_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
