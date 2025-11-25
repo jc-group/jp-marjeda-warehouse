@@ -41,9 +41,9 @@ export function SessionNavbar() {
           (user.role as string | undefined) ||
           "authenticated";
 
-        // Try to load user_roles row to override role/full_name if present
+        // Try to load user_profiles row to override role/full_name if present
         const { data: userRole } = await supabase
-          .from("user_roles" satisfies keyof Database["public"]["Tables"])
+          .from("user_profiles" satisfies keyof Database["public"]["Tables"])
           .select("full_name, role")
           .eq("id", user.id)
           .single();

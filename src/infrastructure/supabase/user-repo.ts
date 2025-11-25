@@ -16,10 +16,20 @@ export async function getUserRoleFromRepo(userId?: string): Promise<UserRole | n
   if (!targetId) return null;
 
   const { data } = await supabase
-    .from("user_roles")
+    .from("user_profiles")
     .select("role")
     .eq("id", targetId)
     .single();
 
   return (data?.role as UserRole | null) ?? null;
+}
+
+export class SupabaseUserRepo {
+  async getCurrentUser() {
+    return getCurrentUser();
+  }
+
+  async getUserRole(userId?: string) {
+    return getUserRoleFromRepo(userId);
+  }
 }

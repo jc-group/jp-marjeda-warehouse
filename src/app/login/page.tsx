@@ -1,30 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { login } from "@/app/login/actions";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [state, action, pending] = useActionState(login, { success: false, message: "" });
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const handleSubmit = async (formData: FormData) => {
-    setPending(true);
-    setError(null);
-    try {
-      // Next server action
-      await login(formData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-      setPending(false);
+  useEffect(() => {
+    if (state.message) {
+      toast({
+        title: state.success ? "Listo" : "Error",
+        description: state.message,
+      });
     }
-  };
+  }, [state, toast]);
+
+  useEffect(() => {
+    if (state.success) {
+      router.push("/inventory");
+    }
+  }, [state.success, router]);
 
   return (
     <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
@@ -35,7 +40,7 @@ export default function LoginPage() {
           <CardDescription>Accede al inventario con tus credenciales Supabase Auth.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit} className="space-y-4">
+          <form action={action} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -59,7 +64,11 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {state.message && (
+              <p className={`text-sm ${state.success ? "text-emerald-600" : "text-red-600"}`}>
+                {state.message}
+              </p>
+            )}
 
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Entrando..." : "Entrar"}

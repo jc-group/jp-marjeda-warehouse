@@ -1,11 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-
 import { createClient } from "@/utils/supabase/server";
 
-export async function login(formData: FormData) {
+export async function login(prevState: { success: boolean; message?: string }, formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -17,9 +15,9 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    return redirect("/login?error=Credenciales inválidas");
+    return { success: false, message: "Credenciales inválidas" };
   }
 
   revalidatePath("/", "layout");
-  redirect("/inventory");
+  return { success: true, message: "Login exitoso" };
 }
