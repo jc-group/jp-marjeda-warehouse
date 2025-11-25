@@ -14,21 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      currency_rates: {
+        Row: {
+          base_currency: string
+          currency_code: string
+          id: string
+          rate: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_currency?: string
+          currency_code: string
+          id?: string
+          rate: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_currency?: string
+          currency_code?: string
+          id?: string
+          rate?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
-          id: string
           location_id: string
           product_id: string
           quantity: number
         }
         Insert: {
-          id?: string
           location_id: string
           product_id: string
           quantity?: number
         }
         Update: {
-          id?: string
           location_id?: string
           product_id?: string
           quantity?: number
@@ -49,27 +70,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          full_name: string | null
-          id: string
-          role: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          role?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          role?: string | null
-        }
-        Relationships: []
       }
       locations: {
         Row: {
@@ -92,57 +92,45 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          full_name: string | null
-          id: string
-          role: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          role?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          role?: string | null
-        }
-        Relationships: []
-      }
       movements: {
         Row: {
           created_at: string | null
+          exchange_rate: number | null
           from_location_id: string | null
           id: string
+          invoice_cost: number | null
+          invoice_currency: string | null
           product_id: string
           quantity: number
           to_location_id: string | null
           type: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
+          exchange_rate?: number | null
           from_location_id?: string | null
           id?: string
+          invoice_cost?: number | null
+          invoice_currency?: string | null
           product_id: string
           quantity: number
           to_location_id?: string | null
           type?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Update: {
           created_at?: string | null
+          exchange_rate?: number | null
           from_location_id?: string | null
           id?: string
+          invoice_cost?: number | null
+          invoice_currency?: string | null
           product_id?: string
           quantity?: number
           to_location_id?: string | null
           type?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -151,6 +139,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movements_invoice_currency_fkey"
+            columns: ["invoice_currency"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
           },
           {
             foreignKeyName: "movements_product_id_fkey"
@@ -171,27 +166,141 @@ export type Database = {
       products: {
         Row: {
           created_at: string | null
+          current_mxn_cost: number
           description: string | null
           id: string
+          image_url: string | null
+          manufacturer_part_number: string | null
           min_stock: number | null
           name: string
+          original_cost_price: number | null
+          original_currency_code: string | null
           sku: string
+          supplier_id: string | null
+          tax_rate: number | null
         }
         Insert: {
           created_at?: string | null
+          current_mxn_cost?: number
           description?: string | null
           id?: string
+          image_url?: string | null
+          manufacturer_part_number?: string | null
           min_stock?: number | null
           name: string
+          original_cost_price?: number | null
+          original_currency_code?: string | null
           sku: string
+          supplier_id?: string | null
+          tax_rate?: number | null
         }
         Update: {
           created_at?: string | null
+          current_mxn_cost?: number
           description?: string | null
           id?: string
+          image_url?: string | null
+          manufacturer_part_number?: string | null
           min_stock?: number | null
           name?: string
+          original_cost_price?: number | null
+          original_currency_code?: string | null
           sku?: string
+          supplier_id?: string | null
+          tax_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_original_currency_code_fkey"
+            columns: ["original_currency_code"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address_city: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip_code: string | null
+          company_name: string
+          contact_person: string | null
+          created_at: string | null
+          delivery_time_days: number | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          payment_terms: string | null
+          phone: string | null
+          rfc: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          company_name: string
+          contact_person?: string | null
+          created_at?: string | null
+          delivery_time_days?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          payment_terms?: string | null
+          phone?: string | null
+          rfc: string
+        }
+        Update: {
+          address_city?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string | null
+          delivery_time_days?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          payment_terms?: string | null
+          phone?: string | null
+          rfc?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          role: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          is_active?: boolean | null
+          role?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -200,12 +309,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_role: { Args: { role_name: string }; Returns: boolean }
       move_inventory: {
         Args: {
           p_from_location_id: string
           p_product_id: string
           p_quantity: number
           p_to_location_id: string
+          p_user_id: string
         }
         Returns: undefined
       }
