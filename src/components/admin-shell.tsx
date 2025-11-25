@@ -91,7 +91,7 @@ export function AdminShell({ role, children }: AdminShellProps) {
   const initials = userInfo ? getInitials(userInfo.fullName) : "?";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 via-white to-zinc-100">
+    <div className="min-h-screen bg-linear-to-b from-zinc-50 via-white to-zinc-100">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur md:px-6">
         <div className="flex items-center gap-3">
           <Button
