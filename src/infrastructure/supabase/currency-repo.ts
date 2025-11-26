@@ -1,25 +1,25 @@
-import { createClient } from "@/utils/supabase/server";
-
 export class SupabaseCurrencyRepo {
   async getExchangeRateToMxn(currencyCode: string): Promise<number> {
     const normalized = currencyCode.toUpperCase();
     if (normalized === "MXN") return 1;
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("currency_rates")
-      .select("rate, base_currency")
-      .eq("currency_code", normalized)
-      .maybeSingle();
+    const url = `https://api.frankfurter.dev/v1/latest?base=${normalized}&symbols=MXN`;
+    const response = await fetch(url, { cache: "no-store" });
 
-    if (error || !data) {
-      throw new Error("No se encontró la tasa de cambio para la divisa seleccionada.");
+    if (!response.ok) {
+      throw new Error("No se pudo obtener la tasa de cambio en Frankfurter.");
     }
 
-    if (data.base_currency && data.base_currency !== "MXN") {
-      throw new Error("La tasa de cambio no está expresada en MXN.");
+    const data = (await response.json()) as {
+      base?: string;
+      rates?: { MXN?: number };
+    };
+
+    const rate = data?.rates?.MXN;
+    if (!rate || typeof rate !== "number" || rate <= 0) {
+      throw new Error("Respuesta inválida de la API de divisas.");
     }
 
-    return data.rate;
+    return rate;
   }
 }
