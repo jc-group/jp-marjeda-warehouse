@@ -18,6 +18,27 @@ export async function login(prevState: { success: boolean; message?: string }, f
     return { success: false, message: "Credenciales inválidas" };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.id) {
+    const { data: existingProfile } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      await supabase.from("user_profiles").insert({
+        id: user.id,
+        full_name: (user.user_metadata?.full_name as string | null) ?? null,
+        role: "operador",
+        is_active: true,
+      });
+    }
+  }
+
   revalidatePath("/", "layout");
   return { success: true, message: "Login exitoso" };
 }

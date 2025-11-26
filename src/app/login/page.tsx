@@ -75,7 +75,7 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-4 text-xs text-zinc-500">
-            ¿Sin cuenta? <Link href="https://app.supabase.com" className="underline">Crea una en Supabase</Link>
+            ¿Sin cuenta? <span className="underline">Contacta al administrador para darte acceso.</span>
           </div>
         </CardContent>
       </Card>
