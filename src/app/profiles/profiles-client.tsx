@@ -13,11 +13,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import {
-  createUserAction,
-  deleteUserAction,
-  updateUserAction,
-} from "@/app/actions/user-actions";
+import { updateUserAction, deleteUserAction } from "@/app/actions/user-actions";
 import { AdminShell } from "@/components/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,18 +25,11 @@ import { createClient } from "@/utils/supabase/client";
 import type { Tables } from "@/types/supabase";
 import type { UserRole } from "@/core/domain/user";
 
-type UsersClientProps = {
+type ProfilesClientProps = {
   role: string | null;
 };
 
-const createSchema = z.object({
-  email: z.string().trim().email("Email inválido"),
-  password: z.string().min(6, "Min 6 caracteres"),
-  full_name: z.string().trim().optional(),
-  role: z.enum(["admin", "operador", "auditor"]).default("operador"),
-});
-
-type CreateFormValues = z.infer<typeof createSchema>;
+type UserProfileRow = Tables<"user_profiles">;
 
 const editSchema = z.object({
   full_name: z.string().trim().optional(),
@@ -51,20 +40,14 @@ const editSchema = z.object({
 
 type EditFormValues = z.infer<typeof editSchema>;
 
-type UserProfileRow = Tables<"user_profiles">;
-
-export default function UsersClient({ role }: UsersClientProps) {
-  const [state, createAction, createPending] = useActionState(createUserAction, {
-    success: false,
-    message: "",
-  });
+export default function ProfilesClient({ role }: ProfilesClientProps) {
   const [updateState, updateAction, updatePending] = useActionState(updateUserAction, {
     success: false,
     message: "",
   });
   const { toast } = useToast();
   const supabase = useMemo(() => createClient(), []);
-  const [users, setUsers] = useState<UserProfileRow[]>([]);
+  const [profiles, setProfiles] = useState<UserProfileRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -73,24 +56,12 @@ export default function UsersClient({ role }: UsersClientProps) {
   const [editing, setEditing] = useState<UserProfileRow | null>(null);
   const [closingAfterUpdate, setClosingAfterUpdate] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
-  const [adminUpdatePending, setAdminUpdatePending] = useState(false);
-  const [adminUpdateMessage, setAdminUpdateMessage] = useState<string | null>(null);
-
-  const createForm = useForm<CreateFormValues>({
-    resolver: zodResolver(createSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      full_name: "",
-      role: "operador",
-    },
-  });
 
   const editForm = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
   });
 
-  const loadUsers = useCallback(
+  const loadProfiles = useCallback(
     async (targetPage: number) => {
       setListLoading(true);
       setListError(null);
@@ -104,10 +75,10 @@ export default function UsersClient({ role }: UsersClientProps) {
 
       if (error) {
         setListError(error.message);
-        setUsers([]);
+        setProfiles([]);
         setTotal(0);
       } else {
-        setUsers((data as UserProfileRow[]) ?? []);
+        setProfiles((data as UserProfileRow[]) ?? []);
         setTotal(count ?? 0);
       }
 
@@ -115,15 +86,6 @@ export default function UsersClient({ role }: UsersClientProps) {
     },
     [supabase]
   );
-
-  useEffect(() => {
-    if (state.message) {
-      toast({
-        title: state.success ? "Listo" : "Error",
-        description: state.message,
-      });
-    }
-  }, [state, toast]);
 
   useEffect(() => {
     if (updateState.message) {
@@ -136,19 +98,9 @@ export default function UsersClient({ role }: UsersClientProps) {
 
   useEffect(() => {
     startTransition(() => {
-      void loadUsers(page);
+      void loadProfiles(page);
     });
-  }, [loadUsers, page]);
-
-  useEffect(() => {
-    if (state.success) {
-      createForm.reset();
-      startTransition(() => {
-        setPage(1);
-        void loadUsers(1);
-      });
-    }
-  }, [state.success, createForm, loadUsers]);
+  }, [loadProfiles, page]);
 
   useEffect(() => {
     if (editing) {
@@ -166,21 +118,10 @@ export default function UsersClient({ role }: UsersClientProps) {
       startTransition(() => {
         setEditing(null);
         setClosingAfterUpdate(false);
-        void loadUsers(page);
+        void loadProfiles(page);
       });
     }
-  }, [closingAfterUpdate, updateState.success, loadUsers, page]);
-
-  const onCreate = createForm.handleSubmit((values) => {
-    const fd = new FormData();
-    fd.append("email", values.email);
-    fd.append("password", values.password);
-    fd.append("full_name", values.full_name ?? "");
-    fd.append("role", values.role);
-    startTransition(() => {
-      createAction(fd);
-    });
-  });
+  }, [closingAfterUpdate, updateState.success, loadProfiles, page]);
 
   const onUpdate = editForm.handleSubmit((values) => {
     if (!editing) return;
@@ -194,16 +135,6 @@ export default function UsersClient({ role }: UsersClientProps) {
       setClosingAfterUpdate(true);
       updateAction(fd);
     });
-    // Opcional: actualizar metadata en auth para mantener sincronía
-    handleAdminUpdate({
-      id: editing.id,
-      meta: {
-        full_name: values.full_name ?? "",
-        username: values.username ?? "",
-        role: values.role,
-        is_active: values.is_active,
-      },
-    });
   });
 
   const handleDelete = (id: string) => {
@@ -216,126 +147,32 @@ export default function UsersClient({ role }: UsersClientProps) {
         description: res?.message ?? "",
       });
       if (res?.success) {
-        void loadUsers(page);
+        void loadProfiles(page);
       }
     });
-  };
-
-  const handleAdminUpdate = async (payload: {
-    id: string;
-    email?: string;
-    password?: string;
-    meta?: Record<string, unknown>;
-  }) => {
-    if (!payload.email && !payload.password && !payload.meta) {
-      setAdminUpdateMessage("Ingresa email, contraseña o metadata para actualizar.");
-      return;
-    }
-
-    setAdminUpdatePending(true);
-    setAdminUpdateMessage(null);
-
-    try {
-      const res = await fetch(`/api/admin/users/${payload.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: payload.email || undefined,
-          password: payload.password || undefined,
-          meta: payload.meta || undefined,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const msg = data?.details || data?.error || "No se pudo actualizar.";
-        setAdminUpdateMessage(msg);
-      } else {
-        setAdminUpdateMessage("Actualizado correctamente en Auth.");
-        void loadUsers(page);
-      }
-    } catch (err) {
-      setAdminUpdateMessage(err instanceof Error ? err.message : "Error inesperado.");
-    } finally {
-      setAdminUpdatePending(false);
-    }
   };
 
   return (
     <AdminShell role={role as UserRole | null}>
       <div className="space-y-6 max-w-5xl mx-auto">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase text-emerald-600">Usuarios y Roles</p>
-          <h1 className="text-3xl font-semibold text-zinc-900">Gestión de usuarios</h1>
-          <p className="text-sm text-zinc-600">Crear, editar rol/estado y eliminar cuentas.</p>
+          <p className="text-xs font-semibold uppercase text-emerald-600">Perfiles</p>
+          <h1 className="text-3xl font-semibold text-zinc-900">Gestión de perfiles</h1>
+          <p className="text-sm text-zinc-600">Actualiza nombre, username, rol y estado.</p>
         </div>
 
         <Card className="border-zinc-100 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle>Nuevo usuario</CardTitle>
-            <CardDescription>Crear en Supabase Auth y user_profiles.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onCreate} onReset={() => createForm.reset()} className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" placeholder="correo@empresa.com" {...createForm.register("email")} />
-                  {createForm.formState.errors.email && (
-                    <p className="text-xs text-red-600">{createForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input id="password" type="password" placeholder="••••••••" {...createForm.register("password")} />
-                  {createForm.formState.errors.password && (
-                    <p className="text-xs text-red-600">{createForm.formState.errors.password.message}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="full_name">Nombre completo</Label>
-                <Input id="full_name" placeholder="Nombre y Apellido" {...createForm.register("full_name")} />
-                {createForm.formState.errors.full_name && (
-                  <p className="text-xs text-red-600">{createForm.formState.errors.full_name.message}</p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="role">Rol</Label>
-                <select
-                  id="role"
-                  className="h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-black/50 focus:ring-offset-2"
-                  defaultValue="operador"
-                  {...createForm.register("role")}
-                >
-                  <option value="admin">Admin</option>
-                  <option value="operador">Operador</option>
-                  <option value="auditor">Auditor</option>
-                </select>
-                {createForm.formState.errors.role && (
-                  <p className="text-xs text-red-600">{createForm.formState.errors.role.message}</p>
-                )}
-              </div>
-
-              <Button type="submit" disabled={createPending} className="w-full sm:w-auto">
-                {createPending ? "Creando..." : "Crear usuario"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="border-zinc-100 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle>Usuarios</CardTitle>
-            <CardDescription>Lista paginada, ordenada por creación.</CardDescription>
+            <CardTitle>Perfiles de usuarios</CardTitle>
+            <CardDescription>Lista paginada desde user_profiles.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {listLoading ? (
               <p className="text-sm text-zinc-500">Cargando...</p>
             ) : listError ? (
               <p className="text-sm text-red-600">Error: {listError}</p>
-            ) : users.length === 0 ? (
-              <p className="text-sm text-zinc-500">No hay usuarios.</p>
+            ) : profiles.length === 0 ? (
+              <p className="text-sm text-zinc-500">No hay perfiles.</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -349,18 +186,18 @@ export default function UsersClient({ role }: UsersClientProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-semibold">{user.full_name ?? "Sin nombre"}</TableCell>
-                        <TableCell>{user.username ?? "—"}</TableCell>
-                        <TableCell className="uppercase">{user.role}</TableCell>
-                        <TableCell>{user.is_active ? "Activo" : "Inactivo"}</TableCell>
+                    {profiles.map((profile) => (
+                      <TableRow key={profile.id}>
+                        <TableCell className="font-semibold">{profile.full_name ?? "Sin nombre"}</TableCell>
+                        <TableCell>{profile.username ?? "—"}</TableCell>
+                        <TableCell className="uppercase">{profile.role}</TableCell>
+                        <TableCell>{profile.is_active ? "Activo" : "Inactivo"}</TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
                             type="button"
                             variant="secondary"
                             size="sm"
-                            onClick={() => setEditing(user)}
+                            onClick={() => setEditing(profile)}
                           >
                             Editar
                           </Button>
@@ -369,7 +206,7 @@ export default function UsersClient({ role }: UsersClientProps) {
                             variant="ghost"
                             size="sm"
                             disabled={isDeleting}
-                            onClick={() => handleDelete(user.id)}
+                            onClick={() => handleDelete(profile.id)}
                           >
                             Eliminar
                           </Button>
@@ -417,7 +254,7 @@ export default function UsersClient({ role }: UsersClientProps) {
             <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-xl">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-xl font-semibold">Editar usuario</h3>
+                  <h3 className="text-xl font-semibold">Editar perfil</h3>
                   <p className="text-sm text-zinc-500">{editing.username ?? editing.id}</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>
@@ -479,57 +316,6 @@ export default function UsersClient({ role }: UsersClientProps) {
                   </Button>
                 </div>
               </form>
-
-              <div className="mt-4 rounded-lg border border-zinc-200 p-3">
-                <p className="text-sm font-semibold text-zinc-800">Actualizar Auth (email / password)</p>
-                <p className="text-xs text-zinc-500">
-                  Usa este bloque para cambiar email o contraseña en auth.users (requiere Service Role).
-                </p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="admin-email">Nuevo email</Label>
-                    <Input id="admin-email" type="email" placeholder="correo@dominio.com" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="admin-password">Nueva contraseña</Label>
-                    <Input id="admin-password" type="password" placeholder="••••••••" />
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={adminUpdatePending}
-                    onClick={() => {
-                      if (!editing) return;
-                      const emailInput = (document.getElementById("admin-email") as HTMLInputElement | null)?.value;
-                      const passwordInput = (
-                        document.getElementById("admin-password") as HTMLInputElement | null
-                      )?.value;
-                      handleAdminUpdate({
-                        id: editing.id,
-                        email: emailInput || undefined,
-                        password: passwordInput || undefined,
-                      });
-                    }}
-                  >
-                    {adminUpdatePending ? "Actualizando..." : "Actualizar Auth"}
-                  </Button>
-                </div>
-                {adminUpdateMessage && (
-                  <p
-                    className={`mt-2 text-sm ${
-                      adminUpdateMessage.toLowerCase().includes("error") ||
-                      adminUpdateMessage.toLowerCase().includes("no se pudo")
-                        ? "text-red-600"
-                        : "text-emerald-600"
-                    }`}
-                  >
-                    {adminUpdateMessage}
-                  </p>
-                )}
-              </div>
             </div>
           </div>
         )}
