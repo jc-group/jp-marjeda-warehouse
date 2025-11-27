@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import ProfileClient from "./profile-client";
 
 import { createClient } from "@/utils/supabase/server";
 import { getUserRole } from "@/core/use-cases/get-user-role";
+
+export const metadata: Metadata = {
+  title: "Perfil | JP Marjeda Warehouse",
+  description: "Actualiza tu información personal, rol visible y estado de cuenta.",
+};
 
 export default async function ProfilePage() {
   const supabase = await createClient();

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import ProductFormClient from "./product-form-client";
 
 import { createClient } from "@/utils/supabase/server";
 import { getUserRole } from "@/core/use-cases/get-user-role";
+
+export const metadata: Metadata = {
+  title: "Registrar producto | JP Marjeda Warehouse",
+  description: "Alta de SKU con costo, divisa, proveedor e imagen de producto.",
+};
 
 export default async function NewProductPage() {
   const supabase = await createClient();

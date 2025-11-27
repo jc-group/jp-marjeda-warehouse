@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { PlaceholderPage } from "@/components/placeholder-page";
 import { getUserRole } from "@/core/use-cases/get-user-role";
+
+export const metadata: Metadata = {
+  title: "Reportes | JP Marjeda Warehouse",
+  description: "Informes de inventario, rotación y auditoría de operaciones.",
+};
 
 export default async function ReportsPage() {
   const role = await getUserRole();
