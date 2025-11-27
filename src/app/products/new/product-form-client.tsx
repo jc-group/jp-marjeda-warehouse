@@ -76,6 +76,7 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null);
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
+  const [editSupplierDisplay, setEditSupplierDisplay] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
   const [state, action, pending] = useActionState(createProductAction, { success: false, message: "" });
@@ -119,6 +120,12 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
     const map = new Map<string, string>();
     suppliers.forEach((s) => map.set(s.id, s.companyName));
     return map;
+  }, [suppliers]);
+
+  const supplierOptionLabels = useMemo(() => {
+    const labels = new Map<string, string>();
+    suppliers.forEach((s) => labels.set(s.id, `${s.companyName} (${s.rfc})`));
+    return labels;
   }, [suppliers]);
 
   const loadProducts = useCallback(
@@ -193,8 +200,9 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
       if (editFileInputRef.current) {
         editFileInputRef.current.value = "";
       }
+      setEditSupplierDisplay(supplierOptionLabels.get(editing.supplier_id ?? "") ?? "");
     }
-  }, [editing, editForm]);
+  }, [editing, editForm, supplierOptionLabels]);
 
   useEffect(() => {
     if (closingAfterUpdate && updateState.success) {
@@ -248,6 +256,15 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
       updateAction(formData);
     });
   });
+
+  const handleEditSupplierChange = (value: string) => {
+    setEditSupplierDisplay(value);
+    const match = suppliers.find((s) => {
+      const label = `${s.companyName} (${s.rfc})`;
+      return label.toLowerCase() === value.toLowerCase() || s.companyName.toLowerCase() === value.toLowerCase();
+    });
+    editForm.setValue("supplierId", match ? match.id : "");
+  };
 
   const handleDelete = (id: string) => {
     const fd = new FormData();
@@ -637,22 +654,24 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
                   <Label htmlFor="edit-supplierId">Proveedor</Label>
                   <Input
                     id="edit-supplierId"
-                    list="supplier-list"
+                    list="edit-supplier-list"
                     placeholder="Selecciona proveedor"
                     autoComplete="off"
-                    {...editForm.register("supplierId")}
+                    value={editSupplierDisplay}
+                    onChange={(e) => handleEditSupplierChange(e.target.value)}
                   />
-                  <datalist id="supplier-list">
+                  <datalist id="edit-supplier-list">
                     {suppliers.map((supplier) => (
                       <option
                         key={supplier.id}
-                        value={supplier.id}
+                        value={`${supplier.companyName} (${supplier.rfc})`}
                         label={`${supplier.companyName} (${supplier.rfc})`}
                       >
                         {supplier.companyName}
                       </option>
                     ))}
                   </datalist>
+                  <input type="hidden" {...editForm.register("supplierId")} />
                   {editForm.formState.errors.supplierId && (
                     <p className="text-xs text-red-600">
                       {editForm.formState.errors.supplierId.message}
