@@ -36,6 +36,14 @@ type ProductFormClientProps = {
   suppliers: Array<{ id: string; companyName: string; rfc: string }>;
 };
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const getImageUrl = (path?: string | null) => {
+  if (!path) return "/placeholder-box.png";
+  if (path.startsWith("http")) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/products/${path}`;
+};
+
 const productSchema = z.object({
   sku: z.string().trim().min(1, "SKU requerido"),
   name: z.string().trim().min(1, "Nombre requerido"),
@@ -66,7 +74,10 @@ type ProductRow = Tables<"products"> & { suppliers?: Tables<"suppliers"> | null 
 export default function ProductFormClient({ role, locations, suppliers }: ProductFormClientProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null);
+  const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement | null>(null);
   const [state, action, pending] = useActionState(createProductAction, { success: false, message: "" });
   const [updateState, updateAction, updatePending] = useActionState(updateProductAction, {
     success: false,
@@ -177,6 +188,11 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
         taxRate: editing.tax_rate ?? 0.16,
         supplierId: editing.supplier_id ?? "",
       });
+      setEditPreviewUrl(getImageUrl(editing.image_url));
+      setEditSelectedFile(null);
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = "";
+      }
     }
   }, [editing, editForm]);
 
@@ -223,6 +239,9 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
     formData.append("taxRate", String(values.taxRate ?? 0.16));
     if (values.supplierId) {
       formData.append("supplierId", values.supplierId);
+    }
+    if (editSelectedFile) {
+      formData.append("image", editSelectedFile);
     }
     startTransition(() => {
       setClosingAfterUpdate(true);
@@ -639,6 +658,58 @@ export default function ProductFormClient({ role, locations, suppliers }: Produc
                       {editForm.formState.errors.supplierId.message}
                     </p>
                   )}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="edit-image">Imagen</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="edit-image"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={editFileInputRef}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        if (file) {
+                          setEditSelectedFile(file);
+                          setEditPreviewUrl(URL.createObjectURL(file));
+                        } else {
+                          setEditSelectedFile(null);
+                          setEditPreviewUrl(getImageUrl(editing?.image_url));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="edit-image"
+                      className="inline-flex w-fit cursor-pointer items-center justify-center rounded-md border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-200"
+                    >
+                      {editSelectedFile ? "Reemplazar imagen" : "Cargar nueva imagen"}
+                    </label>
+                    {editSelectedFile && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditSelectedFile(null);
+                          setEditPreviewUrl(getImageUrl(editing?.image_url));
+                          if (editFileInputRef.current) {
+                            editFileInputRef.current.value = "";
+                          }
+                        }}
+                      >
+                        Quitar
+                      </Button>
+                    )}
+                  </div>
+                  {editPreviewUrl && (
+                    <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50">
+                      <img src={editPreviewUrl} alt="Vista previa" className="h-32 w-full object-cover" />
+                    </div>
+                  )}
+                  <p className="text-xs text-zinc-500">
+                    Deja vacío para conservar la imagen actual o carga un archivo para reemplazarla.
+                  </p>
                 </div>
                 <div className="flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={() => setEditing(null)}>

@@ -96,6 +96,7 @@ export async function updateProductAction(
   const taxRateRaw = (formData.get("taxRate") as string | null) ?? "";
   const taxRate = taxRateRaw ? parseFloat(taxRateRaw) : 0.16;
   const supplierId = (formData.get("supplierId") as string | null)?.trim() || null;
+  const imageFile = formData.get("image");
 
   if (!id || !name) {
     return { success: false, message: "Faltan datos obligatorios (id o nombre)." };
@@ -109,16 +110,29 @@ export async function updateProductAction(
     return { success: false, message: "Usuario no autenticado" };
   }
 
-  const { error } = await supabase
-    .from("products")
-    .update({
-      name,
-      description,
-      min_stock: minStock,
-      tax_rate: taxRate,
-      supplier_id: supplierId,
-    } satisfies TablesUpdate<"products">)
-    .eq("id", id);
+  let imagePath: string | undefined;
+  if (imageFile instanceof File && imageFile.size > 0) {
+    try {
+      imagePath = await inventoryRepo.uploadImage(imageFile);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "No se pudo subir la imagen.";
+      return { success: false, message };
+    }
+  }
+
+  const updatePayload: TablesUpdate<"products"> = {
+    name,
+    description,
+    min_stock: minStock,
+    tax_rate: taxRate,
+    supplier_id: supplierId,
+  };
+
+  if (imagePath) {
+    updatePayload.image_url = imagePath;
+  }
+
+  const { error } = await supabase.from("products").update(updatePayload).eq("id", id);
 
   if (error) {
     return { success: false, message: error.message };
