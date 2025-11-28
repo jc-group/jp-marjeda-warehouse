@@ -8,7 +8,7 @@ import { RegisterProduct } from "@/core/use-cases/register-product";
 import { SupabaseInventoryRepo } from "@/infrastructure/supabase/inventory-repo";
 import { SupabaseUserRepo } from "@/infrastructure/supabase/user-repo";
 import { SupabaseCurrencyRepo } from "@/infrastructure/supabase/currency-repo";
-import { TablesUpdate } from "@/types/supabase";
+import { TablesUpdate } from "@/infrastructure/supabase/types";
 const DEFAULT_IMAGE_PATH = "default.webp";
 const inventoryRepo = new SupabaseInventoryRepo();
 const userRepo = new SupabaseUserRepo();

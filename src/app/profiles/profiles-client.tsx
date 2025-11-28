@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { createClient } from "@/utils/supabase/client";
-import type { Tables } from "@/types/supabase";
+import type { Tables } from "@/infrastructure/supabase/types";
 import type { UserRole } from "@/core/domain/user";
 
 type ProfilesClientProps = {

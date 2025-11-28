@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { Database } from "@/types/supabase";
+import { Database } from "@/infrastructure/supabase/types";
 
 export async function updateSession(request: NextRequest) {
   console.log("[middleware] incoming path:", request.nextUrl.pathname);

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { createClient } from "@/utils/supabase/client";
-import { Database } from "@/types/supabase";
+import { Database } from "@/infrastructure/supabase/types";
 
 type SessionState = {
   fullName: string;

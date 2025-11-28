@@ -1,4 +1,4 @@
-import { Database } from "@/types/supabase";
+import { Database } from "@/infrastructure/supabase/types";
 import { createClient } from "@/utils/supabase/client";
 
 export type InventoryRecord =

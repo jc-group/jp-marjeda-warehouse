@@ -3,7 +3,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { Database } from "@/types/supabase";
+import { Database } from "@/infrastructure/supabase/types";
 
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
