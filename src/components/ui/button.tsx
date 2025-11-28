@@ -19,16 +19,24 @@ const variantStyles: Record<"default" | "secondary" | "ghost", string> = {
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "secondary" | "ghost";
   size?: "sm" | "lg";
+  asChild?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "lg", ...props }, ref) => {
+  ({ className, variant = "default", size = "lg", asChild = false, children, ...props }, ref) => {
+    const mergedClassName = cn(baseStyles, sizeStyles[size], variantStyles[variant], className);
+
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        className: cn((children as { props?: { className?: string } }).props?.className, mergedClassName),
+        ...props,
+      });
+    }
+
     return (
-      <button
-        className={cn(baseStyles, sizeStyles[size], variantStyles[variant], className)}
-        ref={ref}
-        {...props}
-      />
+      <button className={mergedClassName} ref={ref} {...props}>
+        {children}
+      </button>
     );
   }
 );
