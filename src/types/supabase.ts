@@ -226,6 +226,323 @@ export type Database = {
           },
         ]
       }
+      purchase_order_items: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          description: string
+          id: string
+          line_total: number
+          product_id: string | null
+          purchase_order_id: string
+          quantity: number
+          unit_of_measure: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code?: string
+          description: string
+          id?: string
+          line_total: number
+          product_id?: string | null
+          purchase_order_id: string
+          quantity: number
+          unit_of_measure?: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          description?: string
+          id?: string
+          line_total?: number
+          product_id?: string | null
+          purchase_order_id?: string
+          quantity?: number
+          unit_of_measure?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          expected_delivery_date: string | null
+          id: string
+          notes: string | null
+          order_date: string
+          po_number: string
+          purchase_request_id: string | null
+          status: string
+          supplier_id: string
+          total_amount: number
+          updated_at: string | null
+          buyer_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code?: string
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          po_number: string
+          purchase_request_id?: string | null
+          status?: string
+          supplier_id: string
+          total_amount?: number
+          updated_at?: string | null
+          buyer_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          expected_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          po_number?: string
+          purchase_request_id?: string | null
+          status?: string
+          supplier_id?: string
+          total_amount?: number
+          updated_at?: string | null
+          buyer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "purchase_orders_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_request_approvals: {
+        Row: {
+          approver_id: string
+          comments: string | null
+          created_at: string | null
+          decision_at: string | null
+          id: string
+          level: number
+          purchase_request_id: string
+          status: string
+        }
+        Insert: {
+          approver_id: string
+          comments?: string | null
+          created_at?: string | null
+          decision_at?: string | null
+          id?: string
+          level?: number
+          purchase_request_id: string
+          status?: string
+        }
+        Update: {
+          approver_id?: string
+          comments?: string | null
+          created_at?: string | null
+          decision_at?: string | null
+          id?: string
+          level?: number
+          purchase_request_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_request_approvals_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_request_approvals_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_request_items: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          description: string
+          id: string
+          line_total: number
+          needed_date: string | null
+          product_id: string | null
+          purchase_request_id: string
+          quantity: number
+          unit_of_measure: string
+          unit_price_estimated: number
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code?: string
+          description: string
+          id?: string
+          line_total?: number
+          needed_date?: string | null
+          product_id?: string | null
+          purchase_request_id: string
+          quantity: number
+          unit_of_measure?: string
+          unit_price_estimated: number
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          description?: string
+          id?: string
+          line_total?: number
+          needed_date?: string | null
+          product_id?: string | null
+          purchase_request_id?: string
+          quantity?: number
+          unit_of_measure?: string
+          unit_price_estimated?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_request_items_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "purchase_request_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_request_items_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_requests: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          id: string
+          notes: string | null
+          priority: string
+          request_number: string
+          requester_id: string
+          required_date: string | null
+          status: string
+          supplier_id: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          request_number: string
+          requester_id: string
+          required_date?: string | null
+          status?: string
+          supplier_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          id?: string
+          notes?: string | null
+          priority?: string
+          request_number?: string
+          requester_id?: string
+          required_date?: string | null
+          status?: string
+          supplier_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "currency_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "purchase_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_requests_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address_city: string | null
@@ -280,6 +597,8 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string | null
+          can_approve_purchases: boolean | null
+          can_request_purchases: boolean | null
           full_name: string | null
           id: string
           is_active: boolean | null
@@ -288,6 +607,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          can_approve_purchases?: boolean | null
+          can_request_purchases?: boolean | null
           full_name?: string | null
           id: string
           is_active?: boolean | null
@@ -296,6 +617,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          can_approve_purchases?: boolean | null
+          can_request_purchases?: boolean | null
           full_name?: string | null
           id?: string
           is_active?: boolean | null
